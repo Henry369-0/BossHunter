@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { demoResumeSource, getSelectedDemoResumes } from './demoResume'
 import {
   ArrowDown,
   ArrowRight,
@@ -257,8 +258,8 @@ function RankedJobs({
   const filtered = jobs.filter(job => job.status === 'filtered')
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.05fr_.95fr]">
-      <section className="rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)]">
+      <section className="min-w-0 rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-500">Two-stage ranking</div>
@@ -309,9 +310,9 @@ function RankedJobs({
           <summary className="cursor-pointer text-xs font-black text-stone-600">查看 2 个被过滤岗位与具体原因</summary>
           <div className="mt-3 space-y-2">
             {filtered.map(job => (
-              <button key={job.id} type="button" onClick={() => setFocusJob(job)} className="flex w-full items-center justify-between rounded-xl bg-white px-3 py-3 text-left">
-                <div><div className="text-xs font-black text-stone-700">{job.title}</div><div className="mt-1 text-[10px] font-bold text-stone-400">{job.risks.join(' · ')}</div></div>
-                <span className="text-sm font-black text-stone-400">{job.score}</span>
+              <button key={job.id} type="button" onClick={() => setFocusJob(job)} className="flex w-full items-center justify-between gap-3 rounded-xl bg-white px-3 py-3 text-left">
+                <div className="min-w-0 flex-1 break-words"><div className="text-xs font-black text-stone-700">{job.title}</div><div className="mt-1 text-[10px] font-bold text-stone-400">{job.risks.join(' · ')}</div></div>
+                <span className="shrink-0 text-sm font-black text-stone-400">{job.score}</span>
               </button>
             ))}
           </div>
@@ -332,14 +333,14 @@ function RankedJobs({
 
 function JobDetail({ job }: { job: DemoJob }) {
   return (
-    <aside className="self-start rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:sticky sm:top-24 sm:p-6">
+    <aside className="min-w-0 self-start rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm sm:sticky sm:top-24 sm:p-6">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-500">AI decision brief</div>
           <h2 className="mt-1 text-xl font-black text-stone-950">{job.title}</h2>
           <p className="mt-1 text-xs font-bold text-stone-500">{job.company} · {job.salary}</p>
         </div>
-        <div className={`rounded-xl px-3 py-2 text-center ring-1 ${scoreTone(job.score)}`}><div className="text-xl font-black">{job.score}</div><div className="text-[8px] font-black">MATCH</div></div>
+        <div className={`shrink-0 rounded-xl px-3 py-2 text-center ring-1 ${scoreTone(job.score)}`}><div className="text-xl font-black">{job.score}</div><div className="text-[8px] font-black">MATCH</div></div>
       </div>
       <div className="mt-5 flex items-center gap-2 text-[10px] font-black text-stone-500">
         <span className="rounded-full bg-stone-100 px-2.5 py-1.5">预筛 {job.quickScore}</span><ArrowRight className="h-3 w-3" /><span className="rounded-full bg-orange-100 px-2.5 py-1.5 text-orange-700">深度评分 {job.score}</span>
@@ -356,19 +357,19 @@ function JobDetail({ job }: { job: DemoJob }) {
 
 function Confirmation({ selectedJobs, onSimulateReply }: { selectedJobs: DemoJob[]; onSimulateReply: () => void }) {
   return (
-    <div className="grid gap-5 lg:grid-cols-[.9fr_1.1fr]">
-      <section className="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]">
+      <section className="min-w-0 rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-100 text-emerald-700"><CheckCircle2 className="h-6 w-6" /></div>
         <div className="mt-5 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-600">Human checkpoint passed</div>
         <h2 className="mt-1 text-2xl font-black text-stone-950">最终决定仍然在你手里</h2>
         <p className="mt-3 text-sm font-medium leading-6 text-stone-500">你确认了 {selectedJobs.length} 个岗位。演示模式只更新沙盒状态，不打开招聘网站，也不会发送招呼语。</p>
         <div className="mt-6 space-y-3">
-          {selectedJobs.map(job => <div key={job.id} className="flex items-center justify-between rounded-2xl bg-stone-50 px-4 py-3"><div><div className="text-sm font-black">{job.title}</div><div className="mt-1 text-[10px] font-bold text-stone-400">{job.company}</div></div><span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black text-emerald-700">已人工确认</span></div>)}
+          {selectedJobs.map(job => <div key={job.id} className="flex items-center justify-between gap-3 rounded-2xl bg-stone-50 px-4 py-3"><div className="min-w-0 flex-1"><div className="text-sm font-black">{job.title}</div><div className="mt-1 text-[10px] font-bold text-stone-400">{job.company}</div></div><span className="shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-black text-emerald-700">已人工确认</span></div>)}
         </div>
         <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-xs font-bold leading-5 text-orange-900">真实模式：生成招呼语后仍受发送时间窗、每日上限、随机间隔与本地 Chrome 会话约束。</div>
       </section>
 
-      <section className="rounded-[2rem] bg-stone-950 p-6 text-white shadow-2xl shadow-stone-300">
+      <section className="min-w-0 rounded-[2rem] bg-stone-950 p-6 text-white shadow-2xl shadow-stone-300">
         <div className="flex items-center justify-between"><div><div className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-400">Live funnel</div><h2 className="mt-1 text-2xl font-black">状态不是“已投递/没投递”两格</h2></div><BriefcaseBusiness className="h-7 w-7 text-orange-400" /></div>
         <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[['6', '采集'], ['4', '评分通过'], [String(selectedJobs.length), '人工确认'], ['0', '真实发送']].map(([value, label], index) => <div key={label} className={`rounded-2xl p-4 ${index === 2 ? 'bg-orange-500' : 'bg-white/10'}`}><div className="text-3xl font-black">{value}</div><div className="mt-1 text-[10px] font-black text-white/60">{label}</div></div>)}
@@ -383,46 +384,65 @@ function Confirmation({ selectedJobs, onSimulateReply }: { selectedJobs: DemoJob
 }
 
 function ResumeResult({ selectedJobs }: { selectedJobs: DemoJob[] }) {
-  const primary = selectedJobs[0] || jobs[0]
+  const previews = getSelectedDemoResumes(selectedJobs)
+  const [previewJobId, setPreviewJobId] = useState(selectedJobs[0]?.id)
+  const preview = previews.find(item => item.job.id === previewJobId) || previews[0]
+  if (!preview) {
+    return <section className="rounded-[2rem] border border-stone-200 bg-white p-6"><h2 className="text-xl font-black">尚未确认岗位</h2><p className="mt-3 text-sm text-stone-600">请重新演示并选择岗位，再查看对应的虚构简历示例。</p></section>
+  }
+  const primary = preview.job
   return (
-    <div className="grid gap-5 lg:grid-cols-[.72fr_1.28fr]">
-      <section className="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
+    <div className="space-y-5">
+      <section className="rounded-2xl border border-stone-200 bg-white p-4">
+        <h2 className="text-sm font-black">查看已确认岗位的简历示例</h2>
+        <p className="mt-2 text-xs leading-5 text-stone-500">每个岗位单独预览。内容来自原有虚构示例资料，按岗位重排，不新增经历或结果。</p>
+        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="已确认岗位的简历预览">
+          {previews.map(item => <button key={item.job.id} type="button" aria-pressed={primary.id === item.job.id} aria-controls="demo-resume-preview" onClick={() => setPreviewJobId(item.job.id)} className={`max-w-full rounded-xl border px-3 py-2 text-left text-xs font-bold ${primary.id === item.job.id ? 'border-orange-300 bg-orange-50 text-orange-800' : 'border-stone-200 text-stone-600'}`}>{item.job.title} · {item.job.company}</button>)}
+        </div>
+      </section>
+      <div id="demo-resume-preview" role="region" aria-label={`${primary.title}的虚构简历示例`} className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,.72fr)_minmax(0,1.28fr)]">
+      <section className="min-w-0 rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm">
         <div className="text-[10px] font-black uppercase tracking-[0.14em] text-orange-500">Reply detected</div>
         <h2 className="mt-1 text-2xl font-black text-stone-950">“方便发一份简历吗？”</h2>
         <div className="mt-5 rounded-2xl bg-stone-100 p-4 text-xs font-medium leading-6 text-stone-700">
           <div className="mb-2 font-black text-stone-950">{primary.company} · 招聘负责人</div>
-          你好，看了你的经历比较匹配，方便发一份更贴近 AI 产品工程的简历吗？
+          你好，方便发一份更贴近“{primary.title}”岗位的简历吗？这是一条虚构的 HR 请求。
         </div>
         <div className="my-5 flex justify-center"><ArrowDown className="h-5 w-5 text-stone-300" /></div>
         <div className="space-y-3">
           {[
             ['识别意图', '检测到明确的附件简历请求'],
-            ['提取重点', 'AI Agent、Python、工作流落地'],
-            ['生成草稿', '只重排和改写已有事实，不新增经历'],
-            ['等待确认', '文件不自动发给 HR'],
+            ['提取重点', preview.supported ? preview.keywords.join('、') : '此岗位缺少对应示例资料'],
+            ['生成草稿', preview.supported ? '只重排和改写已有事实，不新增经历' : '缺少示例资料，暂停生成草稿'],
+            ['等待确认', preview.supported ? '文件不自动发给 HR' : '没有文件，不发送消息'],
           ].map(([title, detail], index) => <div key={title} className="flex gap-3"><div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-orange-100 text-[10px] font-black text-orange-700">{index + 1}</div><div><div className="text-xs font-black text-stone-900">{title}</div><div className="mt-1 text-[10px] font-bold text-stone-400">{detail}</div></div></div>)}
         </div>
+        <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-xs leading-5 text-orange-900"><div className="font-black">{preview.supported ? '为什么这样重排' : '为什么暂不生成'}</div><p className="mt-2">{preview.mappingReason}</p></div>
+        {preview.limitation && <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">{preview.limitation}</p>}
       </section>
 
-      <section className="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50 px-6 py-4"><div><div className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-600">Tailored resume preview</div><h2 className="mt-1 text-lg font-black text-stone-950">林小满_AI产品工程师_示例.pdf</h2></div><span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-[10px] font-black text-emerald-700"><BadgeCheck className="h-3.5 w-3.5" />事实边界已检查</span></div>
+      <section className="min-w-0 overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 bg-stone-50 px-6 py-4"><div className="min-w-0"><div className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-600">Tailored resume preview</div><h2 className="mt-1 break-words text-lg font-black text-stone-950">{preview.fileName || '该岗位暂不生成简历草稿'}</h2></div><span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-[10px] font-black text-emerald-700"><BadgeCheck className="h-3.5 w-3.5" />虚构示例资料</span></div>
+        {preview.supported ? <>
         <div className="p-6 sm:p-8">
-          <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-stone-900 pb-4"><div><h3 className="text-2xl font-black tracking-tight">林小满</h3><p className="mt-1 text-xs font-bold text-stone-500">AI 产品工程师 · 上海 · 联系方式已隐藏</p></div><div className="text-right text-[10px] font-bold leading-5 text-stone-400">匿名评委演示简历<br />所有人物与公司均为虚构</div></div>
-          <div className="mt-6 grid gap-6 md:grid-cols-[1.45fr_.55fr]">
-            <div>
+          <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-stone-900 pb-4"><div className="min-w-0"><h3 className="text-2xl font-black tracking-tight">{demoResumeSource.name}</h3><p className="mt-1 text-xs font-bold text-stone-500">求职意向：{primary.title} · {primary.city} · 联系方式已隐藏</p></div><div className="text-right text-[10px] font-bold leading-5 text-stone-400">虚构评委演示简历<br />所有人物与公司均为虚构</div></div>
+          <p className="mt-5 text-xs leading-6 text-stone-600">{preview.summary}</p>
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1.45fr)_minmax(0,.55fr)]">
+            <div className="min-w-0">
               <h4 className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">与岗位最相关的项目</h4>
-              <div className="mt-3 rounded-2xl border-2 border-orange-200 bg-orange-50/50 p-4"><div className="flex items-start justify-between gap-3"><div className="text-sm font-black">多步骤 AI 工作流产品</div><span className="rounded-full bg-orange-500 px-2 py-1 text-[9px] font-black text-white">重点前置</span></div><ul className="mt-3 space-y-2 text-xs font-medium leading-5 text-stone-700"><li>• 将模糊业务问题拆成可验证的 Agent 工作流和人工确认点</li><li>• 使用 Python 完成模型调用、状态管理与错误恢复</li><li>• 通过任务回放发现失败环节，迭代提示词与交互反馈</li></ul></div>
-              <div className="mt-4 rounded-2xl bg-stone-50 p-4"><div className="text-sm font-black">求职流程自动化工具</div><p className="mt-2 text-xs font-medium leading-5 text-stone-600">完成岗位预筛、深度评分、沟通草稿、人工确认和状态跟进的端到端产品设计。</p></div>
+              {preview.projects.map((project, index) => <div key={project.id} className={`mt-4 rounded-2xl p-4 ${index === 0 ? 'border-2 border-orange-200 bg-orange-50/50' : 'bg-stone-50'}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0 text-sm font-black">{project.title}</div>{index === 0 && <span className="shrink-0 rounded-full bg-orange-500 px-2 py-1 text-[9px] font-black text-white">重点前置</span>}</div><ul className="mt-3 space-y-2 text-xs font-medium leading-5 text-stone-700">{project.facts.map(fact => <li key={fact}>• {fact}</li>)}</ul></div>)}
             </div>
-            <div>
+            <div className="min-w-0">
               <h4 className="text-[10px] font-black uppercase tracking-[0.16em] text-orange-600">关键词对齐</h4>
-              <div className="mt-3 flex flex-wrap gap-2">{['AI Agent', 'Python', '评测', '工作流', '用户研究', '产品落地'].map(tag => <span key={tag} className="rounded-lg bg-stone-950 px-2.5 py-1.5 text-[10px] font-black text-white">{tag}</span>)}</div>
+              <div className="mt-3 flex flex-wrap gap-2">{preview.keywords.map(tag => <span key={tag} className="rounded-lg bg-stone-950 px-2.5 py-1.5 text-[10px] font-black text-white">{tag}</span>)}</div>
               <div className="mt-5 rounded-2xl border border-stone-200 p-4"><div className="flex items-center gap-2 text-xs font-black"><ShieldCheck className="h-4 w-4 text-emerald-600" />没有新增事实</div><p className="mt-2 text-[10px] font-bold leading-5 text-stone-400">只调整项目顺序、摘要表达和关键词；原始经历、年限、公司与结果不被扩写。</p></div>
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between bg-stone-950 px-6 py-4 text-white"><div className="text-xs font-black">演示完成：简历仍等待人手动下载和发送</div><div className="flex items-center gap-2 text-[10px] font-bold text-stone-400"><MousePointerClick className="h-3.5 w-3.5" />不自动发送</div></div>
+        </> : <div className="p-6 sm:p-8"><h3 className="text-xl font-black">示例资料不足</h3><p className="mt-4 text-sm leading-6 text-stone-600">{preview.limitation}</p><p className="mt-4 text-xs leading-5 text-stone-500">不会把技术或产品项目扩写为团队管理、行业或客户经历。你可以切换其他已确认岗位查看可用示例。</p></div>}
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-950 px-6 py-4 text-white"><div className="text-xs font-black">虚构示例预览：不会生成文件或发送给 HR</div><div className="flex items-center gap-2 text-[10px] font-bold text-stone-400"><MousePointerClick className="h-3.5 w-3.5" />不自动发送</div></div>
       </section>
+      </div>
     </div>
   )
 }
