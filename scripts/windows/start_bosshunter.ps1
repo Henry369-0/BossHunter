@@ -19,43 +19,42 @@ if ($PythonPath) {
 		$Runner = $Bosshunter.Source
 		$RunnerPrefix = @()
 	} else {
-	$Python = Get-Command "py" -ErrorAction SilentlyContinue
-	if (-not $Python) {
-		$Python = Get-Command "python" -ErrorAction SilentlyContinue
+		$Python = Get-Command "py" -ErrorAction SilentlyContinue
+		if (-not $Python) {
+			$Python = Get-Command "python" -ErrorAction SilentlyContinue
+		}
+		if (-not $Python) {
+			throw "Could not find BossHunter or Python. Install the project first with: pip install -e ."
+		}
+		$Runner = $Python.Source
+		$RunnerPrefix = @("-m", "bosshunter.main")
 	}
-	if (-not $Python) {
-		throw "Could not find BossHunter or Python. Install the project first with: pip install -e ."
-	}
-	$Runner = $Python.Source
-	$RunnerPrefix = @("-m", "bosshunter.main")
-	}
 }
-
-$ChromeCandidates = @()
-if ($env:ProgramFiles) {
-	$ChromeCandidates += Join-Path $env:ProgramFiles "Google\Chrome\Application\chrome.exe"
-}
-if (${env:ProgramFiles(x86)}) {
-	$ChromeCandidates += Join-Path ${env:ProgramFiles(x86)} "Google\Chrome\Application\chrome.exe"
-}
-if ($env:LOCALAPPDATA) {
-	$ChromeCandidates += Join-Path $env:LOCALAPPDATA "Google\Chrome\Application\chrome.exe"
-}
-$ChromeCandidates = $ChromeCandidates | Where-Object { Test-Path -LiteralPath $_ }
-
-if (-not $ChromeCandidates) {
-	throw "Could not find Google Chrome. Install Chrome or set up a compatible browser manually."
-}
-
-$Chrome = $ChromeCandidates | Select-Object -First 1
-$ChromeProfile = Join-Path $env:LOCALAPPDATA "BossHunterChrome"
-$ChromeArguments = @(
-	"--remote-debugging-port=9222",
-	"--user-data-dir=$ChromeProfile",
-	"https://www.zhipin.com"
-)
 
 if (-not $SkipChrome) {
+	$ChromeCandidates = @()
+	if ($env:ProgramFiles) {
+		$ChromeCandidates += Join-Path $env:ProgramFiles "Google\Chrome\Application\chrome.exe"
+	}
+	if (${env:ProgramFiles(x86)}) {
+		$ChromeCandidates += Join-Path ${env:ProgramFiles(x86)} "Google\Chrome\Application\chrome.exe"
+	}
+	if ($env:LOCALAPPDATA) {
+		$ChromeCandidates += Join-Path $env:LOCALAPPDATA "Google\Chrome\Application\chrome.exe"
+	}
+	$ChromeCandidates = $ChromeCandidates | Where-Object { Test-Path -LiteralPath $_ }
+	if (-not $ChromeCandidates) {
+		throw "Could not find Google Chrome. Install Chrome or use -SkipChrome to start only the local workbench."
+	}
+
+	$Chrome = $ChromeCandidates | Select-Object -First 1
+	$ChromeProfile = Join-Path $env:LOCALAPPDATA "BossHunterChrome"
+	# Start-Process joins ArgumentList; preserve spaces in the profile path for Windows argv parsing.
+	$ChromeArguments = @(
+		"--remote-debugging-port=9222",
+		"--user-data-dir=`"$ChromeProfile`"",
+		"https://www.zhipin.com"
+	)
 	Write-Host "Starting the BossHunter Chrome profile..."
 	Start-Process -FilePath $Chrome -ArgumentList $ChromeArguments
 	$ChromeReady = $false
@@ -70,36 +69,62 @@ if (-not $SkipChrome) {
 		}
 	}
 	if (-not $ChromeReady) {
-		Write-Warning "Chrome remote debugging did not become ready within 10 seconds."
+		throw "Chrome remote debugging did not become ready at http://127.0.0.1:9222. Check that Chrome can use the dedicated profile."
 	}
-}
 
-Write-Host "Starting the Browser Runtime..."
-& $Runner @RunnerPrefix "connect"
-if ($LASTEXITCODE -ne 0) {
-	Write-Warning "Browser connection check returned exit code $LASTEXITCODE. The workbench will still be opened."
+	Write-Host "Starting the Browser Runtime..."
+	& $Runner @RunnerPrefix "connect"
+	if ($LASTEXITCODE -ne 0) {
+		Write-Warning "Browser connection check returned exit code $LASTEXITCODE. The workbench will still be opened."
+	}
 }
 
 Write-Host "Starting the local workbench..."
 $WebArguments = @($RunnerPrefix) + @("web", "--no-open")
-Start-Process -FilePath $Runner -ArgumentList $WebArguments -WorkingDirectory $RepoRoot -WindowStyle Hidden
+$WebProcess = Start-Process -FilePath $Runner -ArgumentList $WebArguments -WorkingDirectory $RepoRoot -WindowStyle Hidden -PassThru
 
+$WorkbenchReady = $false
+$LastWorkbenchError = "The service did not respond."
 for ($i = 0; $i -lt 20; $i++) {
 	Start-Sleep -Milliseconds 500
+	if ($WebProcess.HasExited) {
+		throw "The local workbench exited with code $($WebProcess.ExitCode). Run the launcher directly to check the installation and port 8686."
+	}
 	try {
-		$null = Invoke-WebRequest -Uri "http://127.0.0.1:8686/" -UseBasicParsing -TimeoutSec 2
+		$Health = Invoke-RestMethod -Uri "http://127.0.0.1:8686/api/health" -TimeoutSec 2
+		if ($Health.status -ne "ok" -or -not $Health.version) {
+			throw "Port 8686 did not return a healthy BossHunter response."
+		}
+		$Page = Invoke-WebRequest -Uri "http://127.0.0.1:8686/" -UseBasicParsing -TimeoutSec 2
+		if ($Page.StatusCode -ne 200 -or $Page.Content -notmatch '(?is)<title[^>]*>[^<]*BossHunter[^<]*</title>') {
+			throw "Port 8686 did not serve the BossHunter workbench page."
+		}
+		$WorkbenchReady = $true
 		break
 	} catch {
-		# The local server is still starting.
+		$LastWorkbenchError = $_.Exception.Message
 	}
+}
+if (-not $WorkbenchReady) {
+	throw "The local BossHunter workbench did not become ready at http://127.0.0.1:8686. $LastWorkbenchError"
+}
+if ($WebProcess.HasExited) {
+	throw "The local workbench exited with code $($WebProcess.ExitCode) while checking readiness. The workbench page will not be opened."
 }
 
 if (-not $SkipChrome) {
 	Start-Process -FilePath $Chrome -ArgumentList @(
 		"--remote-debugging-port=9222",
-		"--user-data-dir=$ChromeProfile",
+		"--user-data-dir=`"$ChromeProfile`"",
 		"http://127.0.0.1:8686"
 	)
 }
+if ($WebProcess.HasExited) {
+	throw "The local workbench exited with code $($WebProcess.ExitCode) before startup completed."
+}
 
-Write-Host "BossHunter is ready. Log in manually in the dedicated Chrome window if needed."
+if ($SkipChrome) {
+	Write-Host "BossHunter is ready at http://127.0.0.1:8686. Open this address in your browser."
+} else {
+	Write-Host "BossHunter is ready. Log in manually in the dedicated Chrome window if needed."
+}

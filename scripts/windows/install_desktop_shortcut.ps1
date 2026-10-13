@@ -8,7 +8,11 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $Launcher = Join-Path $PSScriptRoot "start_bosshunter.ps1"
 $Desktop = [Environment]::GetFolderPath("Desktop")
 $ShortcutPath = Join-Path $Desktop "$ShortcutName.lnk"
-$PowerShell = Join-Path $PSHOME "powershell.exe"
+$HostExecutable = if ($PSVersionTable.PSEdition -eq "Core") { "pwsh.exe" } else { "powershell.exe" }
+$PowerShell = Join-Path $PSHOME $HostExecutable
+if (-not (Test-Path -LiteralPath $PowerShell -PathType Leaf)) {
+	throw "Could not find the current PowerShell host: $PowerShell"
+}
 $IconPath = Join-Path $RepoRoot "assets\bosshunter.ico"
 
 $Shell = New-Object -ComObject WScript.Shell
